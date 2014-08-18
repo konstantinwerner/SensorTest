@@ -22,8 +22,7 @@ import android.widget.Toast;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import in.konstant.btservicetest.R;
-
+import in.konstant.R;
 
 public class BTDeviceList extends Activity {
     // Debug
@@ -44,6 +43,14 @@ public class BTDeviceList extends Activity {
         ((Activity) context).startActivityForResult(scanIntent, REQ_DEVICE_LIST);
     }
 
+    public static String getDeviceAddress(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQ_DEVICE_LIST && resultCode == Activity.RESULT_OK) {
+            return data.getExtras().getString(BTDeviceList.EXTRA_DEVICE_ADDRESS);
+        } else {
+            return null;
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,7 +66,8 @@ public class BTDeviceList extends Activity {
             @Override
             public void onClick(View v) {
                 scanForDevices();
-                v.setVisibility(View.GONE);
+
+                //v.setVisibility(View.GONE);
             }
         });
 
@@ -253,17 +261,23 @@ public class BTDeviceList extends Activity {
     private void scanForDevices() {
         if (DBG) Log.d(TAG, "scanForDevices()");
 
-        setProgressBarIndeterminateVisibility(true);
-        setTitle(R.string.text_scanning);
-        mNewDevicesArrayAdapter.clear();
-
-        findViewById(R.id.title_new_devices).setVisibility(View.VISIBLE);
-
         if (mBluetoothAdapter.isDiscovering()) {
             mBluetoothAdapter.cancelDiscovery();
-        }
 
-        mBluetoothAdapter.startDiscovery();
+            setProgressBarIndeterminateVisibility(false);
+            setTitle(R.string.text_select_device);
+            ((Button)findViewById(R.id.button_scan)).setText(R.string.button_scan);
+
+        } else {
+            setProgressBarIndeterminateVisibility(true);
+            setTitle(R.string.text_scanning);
+            mNewDevicesArrayAdapter.clear();
+
+            findViewById(R.id.title_new_devices).setVisibility(View.VISIBLE);
+            ((Button)findViewById(R.id.button_scan)).setText(R.string.button_stop);
+
+            mBluetoothAdapter.startDiscovery();
+        }
     }
 
     private String getServiceMajorClassName(int majorClass) {
