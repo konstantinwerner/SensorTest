@@ -8,16 +8,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.ArrayMap;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ListView;
 import android.widget.Toast;
 
-import java.util.HashMap;
-
 import in.konstant.BT.BTControl;
-import in.konstant.BT.BTDevice;
 import in.konstant.BT.BTDeviceList;
 import in.konstant.R;
 import in.konstant.Sensors.SensorDevice;
@@ -28,7 +25,7 @@ public class SensorArray extends Activity {
 
     private boolean mBTenabled = false;
 
-    private HashMap<String, SensorDevice> mSensorDevices;
+    private SensorArrayAdapter mSensorDevices;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +42,10 @@ public class SensorArray extends Activity {
 
         BTControl.registerStateChangeReceiver(this, BTStateChangeReceiver);
 
-        mSensorDevices = new HashMap<String, SensorDevice>();
+        mSensorDevices = new SensorArrayAdapter(this);
+
+        ListView SensorDeviceList = (ListView) findViewById(R.id.lvSensorDevices);
+        SensorDeviceList.setAdapter(mSensorDevices);
     }
 
     @Override
@@ -81,8 +81,8 @@ public class SensorArray extends Activity {
     protected void onDestroy() {
         if (DBG) Log.d(TAG, "onDestroy()");
 
-        for (ArrayMap.Entry<String, SensorDevice> entry : mSensorDevices.entrySet()) {
-            entry.getValue().quit();
+        for (int d = 0; d < mSensorDevices.getCount(); d++) {
+            mSensorDevices.getItem(d).quit();
         }
 
         super.onDestroy();
@@ -114,9 +114,10 @@ public class SensorArray extends Activity {
         String address = BTDeviceList.getDeviceAddress(requestCode, resultCode, data);
 
         if (address != null) {
-            SensorDevice newDevice = new SensorDevice(this);
+            SensorDevice newDevice = new SensorDevice(this, address);
             newDevice.setCallback(mDeviceHandler);
-            mSensorDevices.put(address, newDevice);
+
+            mSensorDevices.add(address, newDevice);
         } else {
 
         }
@@ -125,12 +126,10 @@ public class SensorArray extends Activity {
     private final Handler mDeviceHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if (DBG) Log.d(TAG, "DeviceHandler(" + msg.what + ")");
+            if (DBG) Log.d(TAG, "DeviceHandler(" + msg.what + ", " + (String) msg.obj + ")");
 
             switch (msg.what) {
                 case SensorDevice.MESSAGE.CREATED:
-                    mSensorDevices.get((String) msg.obj).connect((String) msg.obj);
-
                     toast(String.format(
                             getResources().getString(R.string.toast_device_added),
                             (String) msg.obj));

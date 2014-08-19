@@ -19,27 +19,27 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         public static final int CONNECTION_LOST = 4;
         public static final int CONNECTION_FAILED = 5;
         public static final int DESTROYED = 6;
-
     }
 
-    private final static byte START_CHAR = '{';
-    private final static byte STOP_CHAR = '}';
+    private BTDevice mBTDevice;
+    private Handler BTHandler, mCallback;
 
     private final Context mContext;
 
-    private BTDevice mBTDevice;
-    Handler BTHandler, mCallback;
     private String mAddress;
+    private String mName;
 
-    private boolean mConnected = false;
+// Lifecycle Management-----------------------------------------------------------------------------
 
-    private String queue = "";
-
-    public SensorDevice(Context context) {
-        super(TAG);
-        if (DBG) Log.d(TAG, "SensorDevice() created");
+    public SensorDevice(Context context, String address) {
+        super(address);
+        if (DBG) Log.d(TAG, "SensorDevice(" + address + ") created");
 
         mContext = context;
+        mAddress = address;
+
+        mBTDevice = new BTDevice(mContext, BTHandler);
+        mName = mBTDevice.getName();
 
         start();
     }
@@ -51,7 +51,6 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     @Override
     protected void onLooperPrepared() {
         BTHandler = new Handler(getLooper(), this);
-        mBTDevice = new BTDevice(mContext, BTHandler);
         mCallback.sendMessage(Message.obtain(null, MESSAGE.CREATED, mAddress));
     }
 
@@ -63,16 +62,33 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         return super.quit();
     }
 
-    public void connect(String address) {
-        if (DBG) Log.d(TAG, "connect(" + address + ")");
-        mAddress = address;
-        mBTDevice.connect(address);
+// Setter & Getter ---------------------------------------------------------------------------------
+
+    public String getDeviceName() {
+        return mName;
+    }
+
+    public String getDeviceAddress() {
+        return mAddress;
+    }
+
+    public boolean getConnected() {
+        return mConnected;
+    }
+
+// Connection Management----------------------------------------------------------------------------
+
+    public void connect() {
+        if (DBG) Log.d(TAG, "connect()");
+        mBTDevice.connect(mAddress);
     }
 
     public void disconnect() {
         if (DBG) Log.d(TAG, "disconnect()");
         mBTDevice.disconnect();
     }
+
+    private boolean mConnected = false;
 
     @Override
     public boolean handleMessage(Message msg) {
@@ -131,6 +147,10 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         mConnected = false;
         mCallback.sendMessage(Message.obtain(null, MESSAGE.CONNECTION_LOST, mAddress));
     }
+
+    private String queue = "";
+    private final static byte START_CHAR = '{';
+    private final static byte STOP_CHAR = '}';
 
     private void handleDataReceived(byte[] data) {
         for (int b = 0; b < data.length && data[b] != 0; ++b) {

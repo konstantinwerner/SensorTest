@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    android:paddingTop="5dp"
+    android:orientation="vertical"
+    android:columnCount="2"
+    android:rowCount="2"
+    android:useDefaultMargins="true">
+
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:typeface="monospace"
+        android:text="Name"
+        android:layout_row="0"
+        android:layout_column="1" />
+
+    <TextView
+        android:id="@+id/tvAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:typeface="monospace"
+        android:text="Address"
+        android:layout_row="1"
+        android:layout_column="1" />
+
+    <View
+        android:id="@+id/inConnected"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/disconnected"
+        android:layout_row="0"
+        android:layout_column="0" />
+
+
+</GridLayout>
