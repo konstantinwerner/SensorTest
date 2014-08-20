@@ -37,6 +37,10 @@ public class SensorArrayAdapter extends BaseAdapter {
         return devices.get(ids.get(id));
     }
 
+    public SensorDevice getItem(String address) {
+        return devices.get(address);
+    }
+
     @Override
     public long getItemId(int id) {
         return 0;
@@ -60,8 +64,14 @@ public class SensorArrayAdapter extends BaseAdapter {
     }
 
     public void remove(String address) {
-        ids.remove(devices.get(address));
+        ids.remove(devices.get(address));   // TODO: Removing does not work
         devices.remove(address);
+        notifyDataSetChanged();
+    }
+
+    public void remove(int id) {
+        devices.remove(ids.get(id));
+        ids.remove(id);
         notifyDataSetChanged();
     }
 
@@ -84,13 +94,16 @@ public class SensorArrayAdapter extends BaseAdapter {
         ViewHolder holder = (ViewHolder) rowView.getTag();
         SensorDevice item = getItem(position);
 
-        holder.name.setText(item.getDeviceName());
-        holder.address.setText(item.getDeviceAddress());
+        if (item != null) { // TODO: Necessary?
 
-        if (item.getConnected()) {
-            holder.connected.setBackgroundColor(parent.getContext().getResources().getColor(R.color.connected));
-        } else {
-            holder.connected.setBackgroundColor(parent.getContext().getResources().getColor(R.color.disconnected));
+            holder.name.setText(item.getDeviceName());
+            holder.address.setText(item.getBluetoothAddress());
+
+            if (item.getConnected()) {
+                holder.connected.setBackgroundColor(parent.getContext().getResources().getColor(R.color.connected));
+            } else {
+                holder.connected.setBackgroundColor(parent.getContext().getResources().getColor(R.color.disconnected));
+            }
         }
 
         return rowView;

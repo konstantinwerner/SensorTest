@@ -30,6 +30,7 @@ public class BTDeviceList extends Activity {
 
     // Return Intent Extra
     public static final String EXTRA_DEVICE_ADDRESS = "device_address";
+    public static final String EXTRA_DEVICE_NAME = "device_name";
     public static final int REQ_DEVICE_LIST = 1;
 
     // Member Variables
@@ -118,6 +119,7 @@ public class BTDeviceList extends Activity {
 
             Intent intent = new Intent();
             intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
+            intent.putExtra(EXTRA_DEVICE_ADDRESS, address); // TODO
 
             setResult(Activity.RESULT_OK, intent);
             finish();

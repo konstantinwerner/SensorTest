@@ -24,14 +24,6 @@ public class BTDevice {
     // Standard Serial Port UUID
     private static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
 
-    private String mAddress;
-    private String mName;
-    private String mManufacturer;
-    private String mCompany;
-
-    private final Context mContext;
-    private final Handler mHandler;
-
     public static final class MESSAGE {
         public static final int CONNECTED = 1;
         public static final int DISCONNECTED = 2;
@@ -44,10 +36,18 @@ public class BTDevice {
     public static final String EXTRA_ADDRESS = "in.konstant.BT.device.extra.ADDRESS";
     public static final String EXTRA_DATA = "in.konstant.BT.device.extra.DATA";
 
-//    private final Object mBluetoothService;
+    private String mAddress;
+    private String mName;
+    private String mManufacturer;
+    private String mCompany;
+
+    private final Context mContext;
+    private Handler mHandler;
+
+   //    private final Object mBluetoothService;
 //    private final Class mBluetoothServiceClass;
     private final BluetoothAdapter mBluetoothAdapter;
-    private BluetoothDevice mBluetoothDevice;
+    private final BluetoothDevice mBluetoothDevice;
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
@@ -58,27 +58,32 @@ public class BTDevice {
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
 
-    public BTDevice(Context context, Handler handler) {
-        if (DBG) Log.d(TAG, "BTDevice()");
+    public BTDevice(Context context, String address) {
+        if (DBG) Log.d(TAG, "BTDevice(" + address + ")");
 
         mContext = context;
-        mHandler = handler;
+        mHandler = null;
+        mAddress = address;
 
 //        mBluetoothService = mContext.getSystemService(Context.BLUETOOTH_SERVICE);
 //        mBluetoothServiceClass = mBluetoothService.getClass();
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothDevice = mBluetoothAdapter.getRemoteDevice(mAddress);
 
         mState = STATE_DISCONNECTED;
     }
 
     public BTDevice(Context context, Handler handler, String address) {
-        this(context, handler);
+        this(context, address);
 
-        if (DBG) Log.d(TAG, "BTDevice(" + address + ")");
-
-        connect(address);
+        mHandler = handler;
     }
+
+    public void setHandler(Handler handler) {
+        mHandler = handler;
+    }
+
 
     public void destroy() {
         if (DBG) Log.d(TAG, "destroy()");
@@ -98,15 +103,8 @@ public class BTDevice {
 
     // Interface -----------------------------------------------------------------------------------
 
-    public void connect(String address) {
-        if (DBG) Log.d(TAG, "connect(" + address + ")");
-
-        mAddress = address;
-        mBluetoothDevice = mBluetoothAdapter.getRemoteDevice(mAddress);
-
-        mName = mBluetoothDevice.getName();
-        mManufacturer = ""; // TODO getManufacturer();
-        mCompany = ""; // TODO getCompany();
+    public void connect() {
+        if (DBG) Log.d(TAG, "connect(" + mAddress + ")");
 
         if (mState == STATE_CONNECTING) {
             if (mConnectThread != null) {
@@ -170,7 +168,7 @@ public class BTDevice {
     }
 
     public String getName() {
-        return mName;
+        return mBluetoothDevice.getName();
     }
 
     public UUID[] getUUIDs() {
@@ -203,16 +201,18 @@ public class BTDevice {
     private void sendMessage(int event, byte[] data) {
         if (DBG) Log.d(TAG, "sendMessage(" + event + ")");
 
-        android.os.Message msg = mHandler.obtainMessage(event);
-        Bundle b = new Bundle();
-        b.putString(EXTRA_ADDRESS, mAddress);
+        if (mHandler != null) {
+            android.os.Message msg = mHandler.obtainMessage(event);
+            Bundle b = new Bundle();
+            b.putString(EXTRA_ADDRESS, mAddress);
 
-        if (data != null && data.length > 0) {
-            b.putByteArray(EXTRA_DATA, data);
+            if (data != null && data.length > 0) {
+                b.putByteArray(EXTRA_DATA, data);
+            }
+
+            msg.setData(b);
+            mHandler.sendMessage(msg);
         }
-
-        msg.setData(b);
-        mHandler.sendMessage(msg);
     }
 
     // State Changers ------------------------------------------------------------------------------

@@ -38,7 +38,7 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         mContext = context;
         mAddress = address;
 
-        mBTDevice = new BTDevice(mContext, BTHandler);
+        mBTDevice = new BTDevice(mContext, mAddress);
         mName = mBTDevice.getName();
 
         start();
@@ -51,25 +51,36 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     @Override
     protected void onLooperPrepared() {
         BTHandler = new Handler(getLooper(), this);
+
+        mBTDevice.setHandler(BTHandler);
+
         mCallback.sendMessage(Message.obtain(null, MESSAGE.CREATED, mAddress));
     }
 
     @Override
     public boolean quit() {
         if (DBG) Log.d(TAG, "quit()");
-        mBTDevice.destroy();
         mCallback.sendMessage(Message.obtain(null, MESSAGE.DESTROYED, mAddress));
+        mBTDevice.destroy();
         return super.quit();
     }
 
 // Setter & Getter ---------------------------------------------------------------------------------
 
+    public String getBluetoothName() {
+        return mBTDevice.getName();
+    }
+
+    public String getBluetoothAddress() {
+        return mAddress;
+    }
+
     public String getDeviceName() {
         return mName;
     }
 
-    public String getDeviceAddress() {
-        return mAddress;
+    public void setDeviceName(String name) {
+        mName = name;
     }
 
     public boolean getConnected() {
@@ -80,7 +91,7 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
     public void connect() {
         if (DBG) Log.d(TAG, "connect()");
-        mBTDevice.connect(mAddress);
+        mBTDevice.connect();
     }
 
     public void disconnect() {

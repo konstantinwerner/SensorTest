@@ -5,13 +5,27 @@
 
 
     <string name="toast_device_added">Device %1$s added</string>
-    <string name="toast_device_removed">Device %1$s removed</string>
+    <string name="toast_device_deleted">Device %1$s deleted</string>
 
     <string name="toast_connected">Connected to %1$s</string>
     <string name="toast_disconnected">Disconnected from %1$s</string>
     <string name="toast_connection_failed">Connection to %1$s failed</string>
     <string name="toast_connection_lost">Connection to %1$s lost</string>
 
+    <!-- Device List Item Dialog -->
+    <string name="item_dialog_title">SensorDevice</string>
+
+    <array name="device_list_item_dialog_disconnected">
+        <item>Connect</item>
+        <item>Settings</item>
+        <item>Delete</item>
+    </array>
+
+    <array name="device_list_item_dialog_connected">
+        <item>Disconnect</item>
+        <item>Settings</item>
+        <item>Delete</item>
+    </array>
 
     <!-- Main Menu -->
     <string name="menu_item_enable_bt">Enable BT</string>

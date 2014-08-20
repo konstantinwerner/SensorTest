@@ -61,6 +61,11 @@ public class BTControl {
         context.registerReceiver(receiver, filter);
     }
 
+    public static void unregisterStateChangeReceiver(Context context, BroadcastReceiver receiver) {
+        context.unregisterReceiver(receiver);
+    }
+
+
     public static String getServiceMajorClassName(int majorClass) {
         switch (majorClass) {
             case BluetoothClass.Service.AUDIO:

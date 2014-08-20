@@ -1,9 +1,13 @@
 package in.konstant.sensortest;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,6 +15,8 @@ import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -19,8 +25,8 @@ import in.konstant.BT.BTDeviceList;
 import in.konstant.R;
 import in.konstant.Sensors.SensorDevice;
 
-public class SensorArray extends Activity {
-    private static final String TAG = "SensorList";
+public class SensorArray extends Activity implements SensorDeviceListDialog.SensorDeviceListDialogListener {
+    private static final String TAG = "SensorArray";
     private static final boolean DBG = true;
 
     private boolean mBTenabled = false;
@@ -44,8 +50,7 @@ public class SensorArray extends Activity {
 
         mSensorDevices = new SensorArrayAdapter(this);
 
-        ListView SensorDeviceList = (ListView) findViewById(R.id.lvSensorDevices);
-        SensorDeviceList.setAdapter(mSensorDevices);
+        prepareListView();
     }
 
     @Override
@@ -85,6 +90,7 @@ public class SensorArray extends Activity {
             mSensorDevices.getItem(d).quit();
         }
 
+        BTControl.unregisterStateChangeReceiver(this, BTStateChangeReceiver);
         super.onDestroy();
     }
 
@@ -128,42 +134,45 @@ public class SensorArray extends Activity {
         public void handleMessage(Message msg) {
             if (DBG) Log.d(TAG, "DeviceHandler(" + msg.what + ", " + (String) msg.obj + ")");
 
+            String address = (String) msg.obj;
+            String name = mSensorDevices.getItem(address).getName();
+
             switch (msg.what) {
                 case SensorDevice.MESSAGE.CREATED:
                     toast(String.format(
                             getResources().getString(R.string.toast_device_added),
-                            (String) msg.obj));
+                            name));
                     break;
 
                 case SensorDevice.MESSAGE.DESTROYED:
-                    mSensorDevices.remove((String) msg.obj);
+                    mSensorDevices.remove(address);
                     toast(String.format(
-                            getResources().getString(R.string.toast_device_removed),
-                            (String) msg.obj));
+                            getResources().getString(R.string.toast_device_deleted),
+                            name));
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTED:
                     toast(String.format(
                             getResources().getString(R.string.toast_connected),
-                            (String) msg.obj));
+                            name));
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTION_FAILED:
                     toast(String.format(
                             getResources().getString(R.string.toast_connection_failed),
-                            (String) msg.obj));
+                            name));
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTION_LOST:
                     toast(String.format(
                             getResources().getString(R.string.toast_connection_lost),
-                            (String) msg.obj));
+                            name));
                     break;
 
                 case SensorDevice.MESSAGE.DISCONNECTED:
                     toast(String.format(
                             getResources().getString(R.string.toast_disconnected),
-                            (String) msg.obj));
+                            name));
                     break;
 
                 default:
@@ -174,6 +183,49 @@ public class SensorArray extends Activity {
 
     private void toast(String text) {
         Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
+    }
+
+    private void prepareListView() {
+        ListView SensorDeviceList = (ListView) findViewById(R.id.lvSensorDevices);
+        SensorDeviceList.setAdapter(mSensorDevices);
+
+        SensorDeviceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                showSensorDeviceListDialog(position);
+            }
+        });
+    }
+
+    public void showSensorDeviceListDialog(int id) {
+        DialogFragment dialog = new SensorDeviceListDialog();
+
+        Bundle args = new Bundle();
+
+        args.putInt(SensorDeviceListDialog.ARG_ID, id);
+        args.putString(SensorDeviceListDialog.ARG_NAME, mSensorDevices.getItem(id).getDeviceName());
+        args.putBoolean(SensorDeviceListDialog.ARG_CONNECTED, mSensorDevices.getItem(id).getConnected());
+
+        dialog.setArguments(args);
+        dialog.show(getFragmentManager(), "showSensorDeviceListDialog");
+    }
+
+    @Override
+    public void onSensorDeviceListDialogConnect(int id, boolean connected) {
+        if (DBG) Log.d(TAG, "Connect/Disconnect Device " + id);
+
+        if (connected) {
+            mSensorDevices.getItem(id).disconnect();
+        } else {
+            mSensorDevices.getItem(id).connect();
+        }
+    }
+
+    @Override
+    public void onSensorDeviceListDialogDelete(int id) {
+        if (DBG) Log.d(TAG, "Delete Device " + id);
+
+        mSensorDevices.getItem(id).quit();
     }
 
     @Override
