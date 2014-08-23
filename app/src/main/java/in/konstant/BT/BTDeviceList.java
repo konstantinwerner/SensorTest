@@ -66,7 +66,6 @@ public class BTDeviceList extends Activity {
             @Override
             public void onClick(View v) {
                 scanForDevices();
-
                 //v.setVisibility(View.GONE);
             }
         });
@@ -119,7 +118,6 @@ public class BTDeviceList extends Activity {
 
             Intent intent = new Intent();
             intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
-            intent.putExtra(EXTRA_DEVICE_ADDRESS, address); // TODO
 
             setResult(Activity.RESULT_OK, intent);
             finish();
@@ -188,7 +186,7 @@ public class BTDeviceList extends Activity {
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 setProgressBarIndeterminateVisibility(false);
                 setTitle(R.string.text_select_device);
-                findViewById(R.id.button_scan).setVisibility(View.VISIBLE);
+                ((Button)findViewById(R.id.button_scan)).setText(R.string.button_scan);
 
                 if (mNewDevicesArrayAdapter.getCount() == 0) {
                     String noDevices = getResources().getText(R.string.text_no_new_devices).toString();

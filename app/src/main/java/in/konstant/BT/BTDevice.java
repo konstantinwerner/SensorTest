@@ -26,11 +26,18 @@ public class BTDevice {
 
     public static final class MESSAGE {
         public static final int CONNECTED = 1;
-        public static final int DISCONNECTED = 2;
-        public static final int CONNECTION_LOST = 3;
-        public static final int CONNECTION_FAILED = 4;
-        public static final int DATA_SENT = 5;
-        public static final int DATA_RECEIVED = 6;
+        public static final int CONNECTING = 2;
+        public static final int DISCONNECTED = 3;
+        public static final int CONNECTION_LOST = 4;
+        public static final int CONNECTION_FAILED = 5;
+        public static final int DATA_SENT = 6;
+        public static final int DATA_RECEIVED = 7;
+    }
+
+    public static final class STATE {
+        public static final int DISCONNECTED = 0;
+        public static final int CONNECTING = 1;
+        public static final int CONNECTED = 2;
     }
 
     public static final String EXTRA_ADDRESS = "in.konstant.BT.device.extra.ADDRESS";
@@ -48,10 +55,6 @@ public class BTDevice {
 //    private final Class mBluetoothServiceClass;
     private final BluetoothAdapter mBluetoothAdapter;
     private final BluetoothDevice mBluetoothDevice;
-
-    private static final int STATE_DISCONNECTED = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
 
     private int mState;
 
@@ -71,7 +74,7 @@ public class BTDevice {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         mBluetoothDevice = mBluetoothAdapter.getRemoteDevice(mAddress);
 
-        mState = STATE_DISCONNECTED;
+        mState = STATE.DISCONNECTED;
     }
 
     public BTDevice(Context context, Handler handler, String address) {
@@ -98,7 +101,7 @@ public class BTDevice {
             mConnectedThread = null;
         }
 
-        mState = STATE_DISCONNECTED;
+        mState = STATE.DISCONNECTED;
     }
 
     // Interface -----------------------------------------------------------------------------------
@@ -106,7 +109,7 @@ public class BTDevice {
     public void connect() {
         if (DBG) Log.d(TAG, "connect(" + mAddress + ")");
 
-        if (mState == STATE_CONNECTING) {
+        if (mState == STATE.CONNECTING) {
             if (mConnectThread != null) {
                 mConnectThread.cancel();
                 mConnectThread = null;
@@ -121,7 +124,9 @@ public class BTDevice {
         mConnectThread = new ConnectThread(mBluetoothDevice);
         mConnectThread.start();
 
-        setState(STATE_CONNECTING);
+        sendMessage(MESSAGE.CONNECTING, null);
+
+        setState(STATE.CONNECTING);
     }
 
     public void send(byte[] data) {
@@ -129,7 +134,7 @@ public class BTDevice {
         ConnectedThread ct;
 
         synchronized (this) {
-            if (mState != STATE_CONNECTED) return;
+            if (mState != STATE.CONNECTED) return;
             ct = mConnectedThread;
         }
 
@@ -139,7 +144,7 @@ public class BTDevice {
     public void disconnect() {
         if (DBG) Log.d(TAG, "disconnect()");
 
-        if (mState == STATE_CONNECTING) {
+        if (mState == STATE.CONNECTING) {
             if (mConnectThread != null)
             {
                 mConnectThread.cancel();
@@ -154,7 +159,7 @@ public class BTDevice {
 
         sendMessage(MESSAGE.DISCONNECTED, null);
 
-        setState(STATE_DISCONNECTED);
+        setState(STATE.DISCONNECTED);
     }
 
     // Setter & Getter -----------------------------------------------------------------------------
@@ -184,11 +189,15 @@ public class BTDevice {
     }
 
     public boolean isConnected() {
-        if (mState == STATE_CONNECTED) {
+        if (mState == STATE.CONNECTED) {
             return true;
         } else {
             return false;
         }
+    }
+
+    public int getState() {
+        return mState;
     }
 
     // Helpers -------------------------------------------------------------------------------------
@@ -235,19 +244,19 @@ public class BTDevice {
 
         sendMessage(MESSAGE.CONNECTED, null);
 
-        setState(STATE_CONNECTED);
+        setState(STATE.CONNECTED);
     }
 
     private void connectionLost() {
         if (DBG) Log.d(TAG, "connectionLost()");
         sendMessage(MESSAGE.CONNECTION_LOST, null);
-        setState(STATE_DISCONNECTED);
+        setState(STATE.DISCONNECTED);
     }
 
     private void connectionFailed() {
         if (DBG) Log.d(TAG, "connectionFailed()");
         sendMessage(MESSAGE.CONNECTION_FAILED, null);
-        setState(STATE_DISCONNECTED);
+        setState(STATE.DISCONNECTED);
     }
 
     // Threads -------------------------------------------------------------------------------------
@@ -345,14 +354,15 @@ public class BTDevice {
             if (DBG) Log.d(TAG, "BEGIN ConnectedThread");
             setName("ConnectedThread");
 
-            byte[] buffer;
-            int bytes;
-
             while (mmConnected) {
                 try {
-                    buffer = new byte[1024];
-                    bytes = mmInStream.read(buffer);
-                    sendMessage(MESSAGE.DATA_RECEIVED, buffer);
+                    int bytes = mmInStream.available();
+
+                    if (bytes > 0) {
+                        byte[] buffer = new byte[bytes];
+                        mmInStream.read(buffer);
+                        sendMessage(MESSAGE.DATA_RECEIVED, buffer);
+                    }
                 } catch (IOException e) {
                     if (DBG) Log.d(TAG, "ConnectedThread run() inStream read() failed", e);
                     if (mmConnected) {

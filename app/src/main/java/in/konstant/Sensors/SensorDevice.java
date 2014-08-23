@@ -6,6 +6,8 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
 
+import java.util.Arrays;
+
 import in.konstant.BT.BTDevice;
 
 public class SensorDevice extends HandlerThread implements Handler.Callback {
@@ -14,11 +16,18 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
     public static final class MESSAGE {
         public static final int CREATED = 1;
-        public static final int CONNECTED = 2;
-        public static final int DISCONNECTED = 3;
-        public static final int CONNECTION_LOST = 4;
-        public static final int CONNECTION_FAILED = 5;
-        public static final int DESTROYED = 6;
+        public static final int CONNECTING = 2;
+        public static final int CONNECTED = 3;
+        public static final int DISCONNECTED = 4;
+        public static final int CONNECTION_LOST = 5;
+        public static final int CONNECTION_FAILED = 6;
+        public static final int DESTROYED = 7;
+    }
+
+    public static final class STATE  {
+        public static final int DISCONNECTED = BTDevice.STATE.DISCONNECTED;
+        public static final int CONNECTING = BTDevice.STATE.CONNECTING;
+        public static final int CONNECTED = BTDevice.STATE.CONNECTED;
     }
 
     private BTDevice mBTDevice;
@@ -84,7 +93,15 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     }
 
     public boolean getConnected() {
-        return mConnected;
+        return mBTDevice.isConnected();
+    }
+
+    public int getConnectionState() { return mBTDevice.getState(); }
+
+// Commands ----------------------------------------------------------------------------------------
+
+    public void sendCommand(String command) {
+        mBTDevice.send(command.getBytes());
     }
 
 // Connection Management----------------------------------------------------------------------------
@@ -99,8 +116,6 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         mBTDevice.disconnect();
     }
 
-    private boolean mConnected = false;
-
     @Override
     public boolean handleMessage(Message msg) {
         if (DBG) Log.d(TAG, "handleMessage(" + msg.what + ")");
@@ -110,6 +125,10 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         switch (msg.what) {
             case BTDevice.MESSAGE.CONNECTED:
                 handleConnected();
+                return true;
+
+            case BTDevice.MESSAGE.CONNECTING:
+                handleConnecting();
                 return true;
 
             case BTDevice.MESSAGE.CONNECTION_FAILED:
@@ -140,22 +159,22 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     }
 
     private void handleConnected() {
-        mConnected = true;
         mCallback.sendMessage(Message.obtain(null, MESSAGE.CONNECTED, mAddress));
     }
 
+    private void handleConnecting() {
+        mCallback.sendMessage(Message.obtain(null, MESSAGE.CONNECTING, mAddress));
+    }
+
     private void handleDisconnected() {
-        mConnected = false;
         mCallback.sendMessage(Message.obtain(null, MESSAGE.DISCONNECTED, mAddress));
     }
 
     private void handleConnectionFailed() {
-        mConnected = false;
         mCallback.sendMessage(Message.obtain(null, MESSAGE.CONNECTION_FAILED, mAddress));
     }
 
     private void handleConnectionLost() {
-        mConnected = false;
         mCallback.sendMessage(Message.obtain(null, MESSAGE.CONNECTION_LOST, mAddress));
     }
 
@@ -164,6 +183,8 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     private final static byte STOP_CHAR = '}';
 
     private void handleDataReceived(byte[] data) {
+        if (DBG) Log.d(TAG, "handleDataReceived(" + data.length + ")");
+
         for (int b = 0; b < data.length && data[b] != 0; ++b) {
             switch (data[b]) {
                 case START_CHAR:
@@ -175,7 +196,7 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
                     break;
 
                 default:
-                    queue += Byte.toString(data[b]);
+                    queue += new String(new byte[] {data[b]});
                     break;
             }
             data[b] = 0;
@@ -187,7 +208,13 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     }
 
     private void processReply(String reply) {
-        String[] args = reply.split("|");
+        if (DBG) Log.d(TAG, "processReply(" + reply + ")");
+
+        String[] args = reply.split("[|]+");
+
+        for (int a = 0; a < args.length; a++) {
+            if (DBG) Log.d(TAG, "Arg[" + a +"] = " + args[a]);
+        }
 
 
     }

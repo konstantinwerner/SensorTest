@@ -19,6 +19,7 @@ public class SensorDeviceListDialog extends DialogFragment {
 
     public interface SensorDeviceListDialogListener {
         public void onSensorDeviceListDialogConnect(int id, boolean connected);
+        public void onSensorDeviceListDialogSettings(int id);
         public void onSensorDeviceListDialogDelete(int id);
     }
 
@@ -58,6 +59,7 @@ public class SensorDeviceListDialog extends DialogFragment {
                                 break;
 
                             case 1: // Settings
+                                mListener.onSensorDeviceListDialogSettings(args.getInt(ARG_ID));
                                 break;
 
                             case 2: // Delete from List

@@ -1,6 +1,7 @@
 package in.konstant.sensortest;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,9 @@ import in.konstant.R;
 import in.konstant.Sensors.SensorDevice;
 
 public class SensorArrayAdapter extends BaseAdapter {
+    private final static String TAG = "SensorArrayAdapter";
+    private final static boolean DBG = true;
+
     private final Activity context;
 
     private ArrayList<String> ids;
@@ -64,12 +68,12 @@ public class SensorArrayAdapter extends BaseAdapter {
     }
 
     public void remove(String address) {
-        ids.remove(devices.get(address));   // TODO: Removing does not work
-        devices.remove(address);
-        notifyDataSetChanged();
+        if (DBG) Log.d(TAG, "remove(" + address + ")");
+        this.remove(ids.indexOf(address));
     }
 
     public void remove(int id) {
+        if (DBG) Log.d(TAG, "remove(" + id + ")");
         devices.remove(ids.get(id));
         ids.remove(id);
         notifyDataSetChanged();
@@ -94,17 +98,19 @@ public class SensorArrayAdapter extends BaseAdapter {
         ViewHolder holder = (ViewHolder) rowView.getTag();
         SensorDevice item = getItem(position);
 
-        if (item != null) { // TODO: Necessary?
+        holder.name.setText(item.getDeviceName());
+        holder.address.setText(item.getBluetoothAddress());
 
-            holder.name.setText(item.getDeviceName());
-            holder.address.setText(item.getBluetoothAddress());
+        int ColorId;
 
-            if (item.getConnected()) {
-                holder.connected.setBackgroundColor(parent.getContext().getResources().getColor(R.color.connected));
-            } else {
-                holder.connected.setBackgroundColor(parent.getContext().getResources().getColor(R.color.disconnected));
-            }
+        switch (item.getConnectionState()) {
+            case SensorDevice.STATE.CONNECTED: ColorId = R.color.connected; break;
+            case SensorDevice.STATE.CONNECTING: ColorId = R.color.connecting; break;
+            default:
+            case SensorDevice.STATE.DISCONNECTED: ColorId = R.color.disconnected; break;
         }
+
+        holder.connected.setBackgroundColor(parent.getContext().getResources().getColor(ColorId));
 
         return rowView;
     }

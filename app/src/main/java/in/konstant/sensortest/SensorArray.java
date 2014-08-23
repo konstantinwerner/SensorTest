@@ -135,12 +135,19 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
             if (DBG) Log.d(TAG, "DeviceHandler(" + msg.what + ", " + (String) msg.obj + ")");
 
             String address = (String) msg.obj;
-            String name = mSensorDevices.getItem(address).getName();
+            String name = mSensorDevices.getItem(address).getDeviceName();
 
             switch (msg.what) {
                 case SensorDevice.MESSAGE.CREATED:
                     toast(String.format(
                             getResources().getString(R.string.toast_device_added),
+                            name));
+                    break;
+
+                case SensorDevice.MESSAGE.CONNECTING:
+                    mSensorDevices.notifyDataSetChanged();
+                    toast(String.format(
+                            getResources().getString(R.string.toast_connecting),
                             name));
                     break;
 
@@ -152,6 +159,7 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTED:
+                    mSensorDevices.notifyDataSetChanged();
                     toast(String.format(
                             getResources().getString(R.string.toast_connected),
                             name));
@@ -164,12 +172,14 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTION_LOST:
+                    mSensorDevices.notifyDataSetChanged();
                     toast(String.format(
                             getResources().getString(R.string.toast_connection_lost),
                             name));
                     break;
 
                 case SensorDevice.MESSAGE.DISCONNECTED:
+                    mSensorDevices.notifyDataSetChanged();
                     toast(String.format(
                             getResources().getString(R.string.toast_disconnected),
                             name));
@@ -222,6 +232,11 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
     }
 
     @Override
+    public void onSensorDeviceListDialogSettings(int id) {
+        mSensorDevices.getItem(id).sendCommand("{a} {b|0} ");
+    }
+
+    @Override
     public void onSensorDeviceListDialogDelete(int id) {
         if (DBG) Log.d(TAG, "Delete Device " + id);
 
@@ -248,6 +263,10 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
 
             case R.id.menu_item_add_device:
                 BTDeviceList.show(this);
+                return true;
+
+            case R.id.menu_item_quit:
+                finish();
                 return true;
         }
         return super.onOptionsItemSelected(item);

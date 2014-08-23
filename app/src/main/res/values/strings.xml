@@ -8,6 +8,7 @@
     <string name="toast_device_deleted">Device %1$s deleted</string>
 
     <string name="toast_connected">Connected to %1$s</string>
+    <string name="toast_connecting">Connecting to %1$s &#8230;</string>
     <string name="toast_disconnected">Disconnected from %1$s</string>
     <string name="toast_connection_failed">Connection to %1$s failed</string>
     <string name="toast_connection_lost">Connection to %1$s lost</string>
@@ -30,7 +31,7 @@
     <!-- Main Menu -->
     <string name="menu_item_enable_bt">Enable BT</string>
     <string name="menu_item_add_device">Add Device</string>
-
+    <string name="menu_item_quit">Quit</string>
 
     <!-- BTDeviceList -->
     <string name="activity_devicelist">Bluetooth Devices</string>
@@ -42,8 +43,8 @@
     <string name="text_scanning">Scanning&#8230;</string>
     <string name="text_select_device">Select Device</string>
 
-    <string name="button_scan">Scan</string>
-    <string name="button_stop">Stop</string>
+    <string name="button_scan">Start Scan</string>
+    <string name="button_stop">Stop Scan</string>
 
     <string name="toast_not_available">Bluetooth not available</string>
 
