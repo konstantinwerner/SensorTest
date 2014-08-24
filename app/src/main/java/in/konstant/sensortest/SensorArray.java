@@ -172,57 +172,57 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
     private final Handler mDeviceHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if (DBG) Log.d(TAG, "DeviceHandler(" + msg.what + ", " + (String) msg.obj + ")");
+            if (DBG) Log.d(TAG, "DeviceHandler(" + msg.what + ", " + msg.obj + ")");
 
             String address = (String) msg.obj;
             String name = mSensorDevices.getItem(address).getDeviceName();
 
             switch (msg.what) {
                 case SensorDevice.MESSAGE.CREATED:
-                    toast(String.format(
-                            getResources().getString(R.string.toast_device_added),
+                    toast(getResources().getString(
+                            R.string.toast_device_added,
                             name));
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTING:
                     mSensorDevices.notifyDataSetChanged();
-                    toast(String.format(
-                            getResources().getString(R.string.toast_connecting),
+                    toast(getResources().getString(
+                            R.string.toast_connecting,
                             name));
                     break;
 
                 case SensorDevice.MESSAGE.DESTROYED:
                     mSensorDevices.remove(address);
-                    toast(String.format(
-                            getResources().getString(R.string.toast_device_deleted),
+                    toast(getResources().getString(
+                            R.string.toast_device_deleted,
                             name));
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTED:
                     mSensorDevices.notifyDataSetChanged();
-                    toast(String.format(
-                            getResources().getString(R.string.toast_connected),
+                    toast(getResources().getString(
+                            R.string.toast_connected,
                             name));
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTION_FAILED:
                     mSensorDevices.notifyDataSetChanged();
-                    toast(String.format(
-                            getResources().getString(R.string.toast_connection_failed),
+                    toast(getResources().getString(
+                            R.string.toast_connection_failed,
                             name));
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTION_LOST:
                     mSensorDevices.notifyDataSetChanged();
-                    toast(String.format(
-                            getResources().getString(R.string.toast_connection_lost),
+                    toast(getResources().getString(
+                            R.string.toast_connection_lost,
                             name));
                     break;
 
                 case SensorDevice.MESSAGE.DISCONNECTED:
                     mSensorDevices.notifyDataSetChanged();
-                    toast(String.format(
-                            getResources().getString(R.string.toast_disconnected),
+                    toast(getResources().getString(
+                            R.string.toast_disconnected,
                             name));
                     break;
 
@@ -252,7 +252,21 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 
-                return false;
+                new AlertDialog.Builder(SensorArray.this)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle(R.string.dialog_delete_all_title)
+//                        .setMessage(R.string.dialog_delete_all_message)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                mSensorDevices.clear();
+                            }
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
+
+                return true;
             }
         });
     }
@@ -283,8 +297,8 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
                 new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .setTitle(R.string.dialog_nobt_title)
-                        .setMessage(String.format(
-                                getResources().getString(R.string.dialog_nobt_message),
+                        .setMessage(getResources().getString(
+                                R.string.dialog_nobt_message,
                                 mSensorDevices.getItem(id).getDeviceName()))
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener()
                         {
@@ -301,7 +315,7 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
 
     @Override
     public void onSensorDeviceListDialogSettings(int id) {
-        mSensorDevices.getItem(id).sendCommand("{a} {b|0} ");
+        mSensorDevices.getItem(id).querySensorInfo(0);
     }
 
     @Override
@@ -313,9 +327,9 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
         new AlertDialog.Builder(this)
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setTitle(R.string.dialog_delete_title)
-                .setMessage(String.format(
-                            getResources().getString(R.string.dialog_delete_message),
-                            mSensorDevices.getItem(id).getDeviceName()))
+                .setMessage(getResources().getString(
+                        R.string.dialog_delete_message,
+                        mSensorDevices.getItem(id).getDeviceName()))
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener()
                 {
                     @Override

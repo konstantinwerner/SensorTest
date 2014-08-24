@@ -13,6 +13,9 @@
     <string name="toast_connection_failed">Connection to %1$s failed</string>
     <string name="toast_connection_lost">Connection to %1$s lost</string>
 
+    <!-- Device List -->
+    <string name="device_list_nrOfSensors">(%1$s Sensors)</string>
+
     <!-- Device List Item Dialog -->
     <string name="item_dialog_title">SensorDevice</string>
 
@@ -26,6 +29,9 @@
         <item>Settings</item>
         <item>Delete</item>
     </array>
+
+    <string name="dialog_delete_all_title">Delete all Devices?</string>
+    <string name="dialog_delete_all_message">Delete all Devices?</string>
 
     <string name="dialog_delete_title">Delete Device?</string>
     <string name="dialog_delete_message">Delete %1$s ?</string>

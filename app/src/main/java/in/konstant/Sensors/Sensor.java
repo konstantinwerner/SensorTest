@@ -1,16 +1,20 @@
 package in.konstant.Sensors;
 
 public class Sensor {
+    private final int id;
     private final String name;
     private final String part;
 
-    private final int numberOfMeasurements;
     private Measurement[] measurements;
 
-    public Sensor(String name, String part, int numberOfMeasurements) {
+    public Sensor(int id, String name, String part) {
+        this.id = id;
         this.name = name;
         this.part = part;
-        this.numberOfMeasurements = numberOfMeasurements;
+    }
+
+    public int getId() {
+        return this.id;
     }
 
     public String getName() {
@@ -22,11 +26,11 @@ public class Sensor {
     }
 
     public int getNumberOfMeasurements() {
-        return this.numberOfMeasurements;
+        return this.measurements.length;
     }
 
     public Measurement getMeasurement(int index) {
-        if (index > -1 && index < this.numberOfMeasurements && index < measurements.length) {
+        if (index > -1 && index < measurements.length) {
             return measurements[index];
         } else {
             throw new IllegalArgumentException();

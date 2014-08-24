@@ -246,8 +246,6 @@ public class BTDevice {
         mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
 
-        sendMessage(MESSAGE.CONNECTED, null);
-
         setState(STATE.CONNECTED);
     }
 
@@ -357,6 +355,8 @@ public class BTDevice {
         public void run() {
             if (DBG) Log.d(TAG, "BEGIN ConnectedThread");
             setName("ConnectedThread");
+
+            sendMessage(MESSAGE.CONNECTED, null);
 
             while (mmConnected) {
                 try {

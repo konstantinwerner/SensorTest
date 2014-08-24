@@ -6,7 +6,7 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.util.Log;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 
 import in.konstant.BT.BTDevice;
 
@@ -24,19 +24,37 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         public static final int DESTROYED = 7;
     }
 
-    public static final class STATE  {
+    public static final class STATE {
         public static final int DISCONNECTED = BTDevice.STATE.DISCONNECTED;
         public static final int CONNECTING = BTDevice.STATE.CONNECTING;
         public static final int CONNECTED = BTDevice.STATE.CONNECTED;
     }
 
+    private static final class CMD {
+        public final static char START_CHAR = '{';
+        public final static char STOP_CHAR = '}';
+        public final static char DELIMITER = '|';
+
+        public static final char GET_NO_SENSORS = 'a';
+        public static final char GET_SENSOR_INFO = 'b';
+        public static final char GET_SENSOR_MEAS_INFO = 'c';
+        public static final char GET_SENSOR_UNIT_INFO = 'd';
+        public static final char GET_SENSOR_MEAS = 'e';
+
+        public static final char SET_SENSOR_RANGE = 'f';
+        public static final char SET_SENSOR_OFF = 'g';
+        public static final char SET_SENSOR_ON = 'h';
+    }
+
     private BTDevice mBTDevice;
     private Handler BTHandler, mCallback;
-
     private final Context mContext;
 
     private final String mAddress;
     private String mName;
+
+    private int numberOfSensors;
+    private ArrayList<Sensor> sensors;
 
 // Lifecycle Management-----------------------------------------------------------------------------
 
@@ -49,6 +67,8 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
         mBTDevice = new BTDevice(mContext, mAddress);
         mName = mBTDevice.getName();
+
+        sensors = new ArrayList<Sensor>();
 
         start();
     }
@@ -76,6 +96,12 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
 // Setter & Getter ---------------------------------------------------------------------------------
 
+    public boolean getConnected() {
+        return mBTDevice.isConnected();
+    }
+
+    public int getConnectionState() { return mBTDevice.getState(); }
+
     public String getBluetoothName() {
         return mBTDevice.getName();
     }
@@ -92,16 +118,25 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         mName = name;
     }
 
-    public boolean getConnected() {
-        return mBTDevice.isConnected();
+    public int getNumberOfSensors() {
+        return sensors.size();
     }
-
-    public int getConnectionState() { return mBTDevice.getState(); }
 
 // Commands ----------------------------------------------------------------------------------------
 
     public void sendCommand(String command) {
+        if (DBG) Log.d(TAG, "Sending CMD: " + command);
         mBTDevice.send(command.getBytes());
+    }
+
+    public void queryNumberOfSensors(){
+        sendCommand("{" + CMD.GET_NO_SENSORS + "} ");
+    }
+
+    public void querySensorInfo(int id) {
+        if (id >= 0 && id < 74) { // Printable Ascii Characters between 0 and z
+            sendCommand("{" + CMD.GET_SENSOR_INFO + CMD.DELIMITER + Character.toChars(48 + id) + "} "); // TODO: Int to Char ?!
+        }
     }
 
 // Connection Management----------------------------------------------------------------------------
@@ -160,6 +195,8 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
     private void handleConnected() {
         mCallback.sendMessage(Message.obtain(null, MESSAGE.CONNECTED, mAddress));
+
+        queryNumberOfSensors(); // TODO: For testing!
     }
 
     private void handleConnecting() {
@@ -179,19 +216,17 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     }
 
     private String queue = "";
-    private final static byte START_CHAR = '{';
-    private final static byte STOP_CHAR = '}';
 
     private void handleDataReceived(byte[] data) {
         if (DBG) Log.d(TAG, "handleDataReceived(" + data.length + ")");
 
         for (int b = 0; b < data.length && data[b] != 0; ++b) {
             switch (data[b]) {
-                case START_CHAR:
+                case CMD.START_CHAR:
                     queue = "";
                     break;
 
-                case STOP_CHAR:
+                case CMD.STOP_CHAR:
                     processReply(queue);
                     break;
 
@@ -210,12 +245,45 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     private void processReply(String reply) {
         if (DBG) Log.d(TAG, "processReply(" + reply + ")");
 
-        String[] args = reply.split("[|]+");
+        String[] args = reply.split("[" + CMD.DELIMITER + "]+");
 
-        for (int a = 0; a < args.length; a++) {
-            if (DBG) Log.d(TAG, "Arg[" + a +"] = " + args[a]);
+        if (args.length == 0)
+            return;
+
+        if (DBG)
+            for (int a = 0; a < args.length; a++)
+                Log.d(TAG, "Arg[" + a +"] = " + args[a]);
+
+        switch (args[0].charAt(0)) {
+            case CMD.GET_NO_SENSORS:
+                numberOfSensors = Integer.parseInt(args[1]);
+                break;
+
+            case CMD.GET_SENSOR_INFO:
+                handleSensorInfo(
+                        Integer.parseInt(args[1]),
+                        args[2],
+                        args[3],
+                        Integer.parseInt(args[4]));
+                break;
+
+            case CMD.GET_SENSOR_MEAS: break;
+            case CMD.GET_SENSOR_MEAS_INFO: break;
+            case CMD.GET_SENSOR_UNIT_INFO: break;
+            case CMD.SET_SENSOR_RANGE: break;
+            default:
+
         }
+    }
 
+    private void handleSensorInfo(int id, String name, String part, int numberOfMeasurements) {
+        if (DBG) Log.d(TAG, "Sensor[" + id + "] = " + name + " ("+ part +")");
+        Sensor sensor = new Sensor(id, name, part);
 
+        if (sensors.size() > id) {
+            sensors.set(id, sensor);    // Replace existing entry
+        } else {
+            sensors.add(sensor);        // Add new Sensor
+        }
     }
 }

@@ -30,6 +30,7 @@ public class SensorArrayAdapter extends BaseAdapter {
         public TextView name;
         public TextView address;
         public View connected;
+        public TextView nrOfSensors;
     }
 
     public SensorArrayAdapter(Activity context) {
@@ -102,6 +103,7 @@ public class SensorArrayAdapter extends BaseAdapter {
             viewHolder.name = (TextView) rowView.findViewById(R.id.tvName);
             viewHolder.address = (TextView) rowView.findViewById(R.id.tvAddress);
             viewHolder.connected = (View) rowView.findViewById(R.id.inConnected);
+            viewHolder.nrOfSensors = (TextView) rowView.findViewById(R.id.tvNrOfSensors);
 
             rowView.setTag(viewHolder);
         }
@@ -111,6 +113,16 @@ public class SensorArrayAdapter extends BaseAdapter {
 
         holder.name.setText(item.getDeviceName());
         holder.address.setText(item.getBluetoothAddress());
+
+        if (item.getConnected()) {
+
+            holder.nrOfSensors.setText(parent.getContext().getResources().getString(
+                            R.string.device_list_nrOfSensors,
+                            item.getNumberOfSensors())
+            );
+        } else {
+            holder.nrOfSensors.setText("");
+        }
 
         int ColorId;
 
