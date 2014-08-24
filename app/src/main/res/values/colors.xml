@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="disconnected">#ffe50000</color>
-    <color name="connecting">#ffefa817</color>
-    <color name="connected">#ff00bf1d</color>
+    <color name="disconnected">#ffCC0000</color>
+    <color name="connecting">#ffff8800</color>
+    <color name="connected">#ff669900</color>
 
 
 </resources>

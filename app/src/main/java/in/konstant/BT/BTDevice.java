@@ -16,6 +16,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import in.konstant.Sensors.SensorDevice;
+
 public class BTDevice {
     // Debug
     private static final String TAG = "BTDevice";
@@ -157,7 +159,9 @@ public class BTDevice {
             mConnectedThread = null;
         }
 
-        sendMessage(MESSAGE.DISCONNECTED, null);
+        if (mState == STATE.CONNECTED) {
+            sendMessage(MESSAGE.DISCONNECTED, null);
+        }
 
         setState(STATE.DISCONNECTED);
     }

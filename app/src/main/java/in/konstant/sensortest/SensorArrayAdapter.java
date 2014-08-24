@@ -1,6 +1,8 @@
 package in.konstant.sensortest;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +12,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 import in.konstant.R;
 import in.konstant.Sensors.SensorDevice;
@@ -55,6 +58,10 @@ public class SensorArrayAdapter extends BaseAdapter {
         return ids.size();
     }
 
+    public Set<String> getKeySet() {
+        return devices.keySet();
+    }
+
     public void clear() {
         devices.clear();
         ids.clear();
@@ -77,6 +84,10 @@ public class SensorArrayAdapter extends BaseAdapter {
         devices.remove(ids.get(id));
         ids.remove(id);
         notifyDataSetChanged();
+    }
+
+    public boolean contains(String address) {
+        return devices.containsKey(address);
     }
 
     @Override

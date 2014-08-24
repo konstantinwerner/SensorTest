@@ -50,6 +50,7 @@ public class SensorDeviceListDialog extends DialogFragment {
         }
 
         builder.setTitle(args.getString(ARG_NAME))
+                .setIcon(android.R.drawable.ic_menu_preferences)
                 .setItems(itemsId, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

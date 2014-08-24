@@ -35,7 +35,7 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
     private final Context mContext;
 
-    private String mAddress;
+    private final String mAddress;
     private String mName;
 
 // Lifecycle Management-----------------------------------------------------------------------------
