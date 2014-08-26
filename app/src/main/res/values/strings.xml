@@ -14,9 +14,13 @@
     <string name="toast_connection_lost">Connection to %1$s lost</string>
 
     <!-- Device List -->
-    <string name="device_list_nrOfSensors">(%1$s Sensors)</string>
+    <plurals name="device_list_nrOfSensors">
+        <item quantity="zero">(No Sensors)</item>
+        <item quantity="one">(%d Sensor)</item>
+        <item quantity="other">(%d Sensors)</item>
+    </plurals>
 
-    <!-- Device List Item Dialog -->
+    <!-- Device List Item Dialogs -->
     <string name="item_dialog_title">SensorDevice</string>
 
     <array name="device_list_item_dialog_disconnected">
@@ -26,22 +30,26 @@
 
     <array name="device_list_item_dialog_connected">
         <item>Disconnect</item>
-        <item>Settings</item>
         <item>Delete</item>
+        <item>Settings</item>
     </array>
 
     <string name="dialog_delete_all_title">Delete all Devices?</string>
-    <string name="dialog_delete_all_message">Delete all Devices?</string>
+    <string name="dialog_delete_all_message">All Devices will be deleted!</string>
 
     <string name="dialog_delete_title">Delete Device?</string>
-    <string name="dialog_delete_message">Delete %1$s ?</string>
+    <string name="dialog_delete_message">%1$s will be deleted!</string>
 
     <string name="dialog_nobt_title">Bluetooth is disabled</string>
     <string name="dialog_nobt_message">Enable Bluetooth?</string>
 
+    <!-- Internal Sensors -->
+    <string name="internal_device_name">Internal Sensors</string>
+
     <!-- Main Menu -->
     <string name="menu_item_enable_bt">Enable BT</string>
     <string name="menu_item_add_device">Add Device</string>
+    <string name="menu_item_clear_list">Delete all Devices</string>
     <string name="menu_item_quit">Quit</string>
 
     <!-- BTDeviceList -->

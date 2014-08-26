@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashSet;
@@ -26,6 +27,7 @@ import java.util.Set;
 import in.konstant.BT.BTControl;
 import in.konstant.BT.BTDeviceList;
 import in.konstant.R;
+import in.konstant.Sensors.InternalSensors;
 import in.konstant.Sensors.SensorDevice;
 
 public class SensorArray extends Activity implements SensorDeviceListDialog.SensorDeviceListDialogListener {
@@ -36,6 +38,7 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
     private static final String DEVICE_ADDRESSES = "deviceAddresses";
 
     private SensorArrayAdapter mSensorDevices;
+    private InternalSensors mInternalSensors;
 
     private boolean enableToasts = false;
 
@@ -55,8 +58,10 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
         BTControl.registerStateChangeReceiver(this, BTStateChangeReceiver);
 
         mSensorDevices = new SensorArrayAdapter(this);
+        mInternalSensors = new InternalSensors(this);
 
         loadDeviceList();
+        loadInternalSensors();
 
         prepareListView();
     }
@@ -124,6 +129,21 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
         }
     }
 
+    private void loadInternalSensors() {
+        TextView tv = (TextView) findViewById(R.id.tvOwnName);
+        tv.setText(mInternalSensors.getName());
+
+        tv = (TextView) findViewById(R.id.tvOwnAddress);
+        tv.setText(mInternalSensors.getAddress());
+
+        tv = (TextView) findViewById(R.id.tvOwnNrOfSensors);
+        tv.setText(getResources().getQuantityString(
+                R.plurals.device_list_nrOfSensors,
+                mInternalSensors.getNumberOfSensors(),
+                mInternalSensors.getNumberOfSensors()
+        ));
+    }
+
     private void addDevice(String address) {
         SensorDevice newDevice = new SensorDevice(this, address);
         newDevice.setCallback(mDeviceHandler);
@@ -141,6 +161,7 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
                 switch (state) {
                     case BluetoothAdapter.STATE_ON:
                             mSensorDevices.notifyDataSetChanged();
+                            loadInternalSensors();
                         break;
 
                     case BluetoothAdapter.STATE_OFF:
@@ -226,6 +247,10 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
                             name));
                     break;
 
+                case SensorDevice.MESSAGE.CHANGED:
+                    mSensorDevices.notifyDataSetChanged();
+                    break;
+
                 default:
                     break;
             }
@@ -255,9 +280,8 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
                 new AlertDialog.Builder(SensorArray.this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .setTitle(R.string.dialog_delete_all_title)
-//                        .setMessage(R.string.dialog_delete_all_message)
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener()
-                        {
+                        .setMessage(R.string.dialog_delete_all_message)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 mSensorDevices.clear();
@@ -360,6 +384,22 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
 
             case R.id.menu_item_add_device:
                 BTDeviceList.show(this);
+                return true;
+
+            case R.id.menu_item_clear_list:
+                new AlertDialog.Builder(this)
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setTitle(R.string.dialog_delete_all_title)
+                        .setMessage(R.string.dialog_delete_all_message)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                mSensorDevices.clear();
+                            }
+                        })
+                        .setNegativeButton("No", null)
+                        .show();
                 return true;
 
             case R.id.menu_item_quit:

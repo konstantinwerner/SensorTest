@@ -14,12 +14,14 @@
         android:orderInCategory="200"
         android:showAsAction="never" />
 
-    <item android:id="@+id/menu_item_quit"
-        android:title="@string/menu_item_quit"
+    <item android:id="@+id/menu_item_clear_list"
+        android:title="@string/menu_item_clear_list"
         android:orderInCategory="300"
         android:showAsAction="never" />
 
-
-
+    <item android:id="@+id/menu_item_quit"
+        android:title="@string/menu_item_quit"
+        android:orderInCategory="400"
+        android:showAsAction="never" />
 
 </menu>

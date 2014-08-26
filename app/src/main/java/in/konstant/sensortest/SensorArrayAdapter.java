@@ -115,10 +115,12 @@ public class SensorArrayAdapter extends BaseAdapter {
         holder.address.setText(item.getBluetoothAddress());
 
         if (item.getConnected()) {
+            int nrOfSensors = item.getNumberOfSensors();
 
-            holder.nrOfSensors.setText(parent.getContext().getResources().getString(
-                            R.string.device_list_nrOfSensors,
-                            item.getNumberOfSensors())
+            holder.nrOfSensors.setText(parent.getContext().getResources().getQuantityString(
+                            R.plurals.device_list_nrOfSensors,
+                            nrOfSensors,
+                            nrOfSensors)
             );
         } else {
             holder.nrOfSensors.setText("");

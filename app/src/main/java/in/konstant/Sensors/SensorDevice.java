@@ -1,6 +1,7 @@
 package in.konstant.Sensors;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -22,6 +23,7 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         public static final int CONNECTION_LOST = 5;
         public static final int CONNECTION_FAILED = 6;
         public static final int DESTROYED = 7;
+        public static final int CHANGED = 8;
     }
 
     public static final class STATE {
@@ -49,6 +51,8 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     private BTDevice mBTDevice;
     private Handler BTHandler, mCallback;
     private final Context mContext;
+
+    private boolean replyReceived = false;
 
     private final String mAddress;
     private String mName;
@@ -124,19 +128,32 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
 // Commands ----------------------------------------------------------------------------------------
 
-    public void sendCommand(String command) {
+    public synchronized void sendCommand(final String command, boolean waitForReply) {
         if (DBG) Log.d(TAG, "Sending CMD: " + command);
+
+        replyReceived = false;
+
         mBTDevice.send(command.getBytes());
+
+        if (waitForReply) {
+            try {
+                while (!replyReceived) {
+                    wait();
+                }
+            } catch (InterruptedException ie) { }
+        }
     }
 
     public void queryNumberOfSensors(){
-        sendCommand("{" + CMD.GET_NO_SENSORS + "} ");
+        sendCommand("{" + CMD.GET_NO_SENSORS + "} ", true);
     }
 
     public void querySensorInfo(int id) {
+        Log.d(TAG, "---Before---");
         if (id >= 0 && id < 74) { // Printable Ascii Characters between 0 and z
-            sendCommand("{" + CMD.GET_SENSOR_INFO + CMD.DELIMITER + Character.toChars(48 + id) + "} "); // TODO: Int to Char ?!
+            sendCommand("{" + CMD.GET_SENSOR_INFO + CMD.DELIMITER + (char) ('0' + id) + "} ", true);
         }
+        Log.d(TAG, "---After---");
     }
 
 // Connection Management----------------------------------------------------------------------------
@@ -195,8 +212,6 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
     private void handleConnected() {
         mCallback.sendMessage(Message.obtain(null, MESSAGE.CONNECTED, mAddress));
-
-        queryNumberOfSensors(); // TODO: For testing!
     }
 
     private void handleConnecting() {
@@ -242,7 +257,7 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
     }
 
-    private void processReply(String reply) {
+    private synchronized void processReply(String reply) {
         if (DBG) Log.d(TAG, "processReply(" + reply + ")");
 
         String[] args = reply.split("[" + CMD.DELIMITER + "]+");
@@ -256,7 +271,7 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
 
         switch (args[0].charAt(0)) {
             case CMD.GET_NO_SENSORS:
-                numberOfSensors = Integer.parseInt(args[1]);
+                handleNumberOfSensors(Integer.parseInt(args[1]));
                 break;
 
             case CMD.GET_SENSOR_INFO:
@@ -272,12 +287,25 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
             case CMD.GET_SENSOR_UNIT_INFO: break;
             case CMD.SET_SENSOR_RANGE: break;
             default:
-
         }
+
+        replyReceived = true;
+        notifyAll();
+    }
+
+    private void handleNumberOfSensors(int numberOfSensors) {
+        if (DBG) Log.d(TAG, "Sensors = " + numberOfSensors);
+
+        this.numberOfSensors = numberOfSensors;
+
+        sensors.ensureCapacity(numberOfSensors);
+
+        mCallback.sendMessage(Message.obtain(null, MESSAGE.CHANGED, mAddress));
     }
 
     private void handleSensorInfo(int id, String name, String part, int numberOfMeasurements) {
         if (DBG) Log.d(TAG, "Sensor[" + id + "] = " + name + " ("+ part +")");
+
         Sensor sensor = new Sensor(id, name, part);
 
         if (sensors.size() > id) {
@@ -285,5 +313,7 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         } else {
             sensors.add(sensor);        // Add new Sensor
         }
+
+        mCallback.sendMessage(Message.obtain(null, MESSAGE.CHANGED, mAddress));
     }
 }

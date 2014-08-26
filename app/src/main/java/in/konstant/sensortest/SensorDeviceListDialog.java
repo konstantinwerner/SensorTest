@@ -16,7 +16,6 @@ public class SensorDeviceListDialog extends DialogFragment {
     public static final String ARG_NAME = "arg_name";
     public static final String ARG_CONNECTED = "arg_connected";
 
-
     public interface SensorDeviceListDialogListener {
         public void onSensorDeviceListDialogConnect(int id, boolean connected);
         public void onSensorDeviceListDialogSettings(int id);
@@ -59,14 +58,13 @@ public class SensorDeviceListDialog extends DialogFragment {
                                 mListener.onSensorDeviceListDialogConnect(args.getInt(ARG_ID), args.getBoolean(ARG_CONNECTED));
                                 break;
 
-                            case 1: // Settings
-                                mListener.onSensorDeviceListDialogSettings(args.getInt(ARG_ID));
-                                break;
-
-                            case 2: // Delete from List
+                            case 1: // Delete from List
                                 mListener.onSensorDeviceListDialogDelete(args.getInt(ARG_ID));
                                 break;
 
+                            case 2: // Settings
+                                mListener.onSensorDeviceListDialogSettings(args.getInt(ARG_ID));
+                                break;
                         }
                     }
                 });
