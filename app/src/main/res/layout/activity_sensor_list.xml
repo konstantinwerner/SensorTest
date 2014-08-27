@@ -71,11 +71,13 @@
         android:layout_height="1dp"
         android:background="#ff424242" />
 
-    <ListView
+    <ExpandableListView
         android:id="@+id/lvSensorDevices"
         android:layout_below="@+id/divider"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
-        </ListView>
+        android:layout_height="wrap_content"
+        android:drawSelectorOnTop="false"
+        android:groupIndicator="@color/transparent">
+        </ExpandableListView>
 
 </RelativeLayout>

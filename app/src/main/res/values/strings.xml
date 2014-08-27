@@ -20,6 +20,12 @@
         <item quantity="other">(%d Sensors)</item>
     </plurals>
 
+    <plurals name="device_list_nrOfMeasurements">
+        <item quantity="zero">(No Meas.)</item>
+        <item quantity="one">(%d Meas.)</item>
+        <item quantity="other">(%d Meas.)</item>
+    </plurals>
+
     <!-- Device List Item Dialogs -->
     <string name="item_dialog_title">SensorDevice</string>
 

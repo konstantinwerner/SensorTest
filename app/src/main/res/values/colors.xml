@@ -4,4 +4,5 @@
     <color name="connecting">#ffff8800</color>
     <color name="connected">#ff669900</color>
 
+    <color name="transparent">#00000000</color>
 </resources>

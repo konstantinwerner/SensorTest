@@ -122,12 +122,15 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         mName = name;
     }
 
+    public Sensor getSensor(int id) {
+        return sensors.get(id);
+    }
+
     public int getNumberOfSensors() {
         return sensors.size();
     }
 
 // Commands ----------------------------------------------------------------------------------------
-
     public synchronized void sendCommand(final String command, boolean waitForReply) {
         if (DBG) Log.d(TAG, "Sending CMD: " + command);
 
@@ -145,15 +148,17 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     }
 
     public void queryNumberOfSensors(){
+        if (DBG) Log.d(TAG, "Query No. of Sensors");
         sendCommand("{" + CMD.GET_NO_SENSORS + "} ", true);
+        if (DBG) Log.d(TAG, "Got No. of Sensors");
     }
 
     public void querySensorInfo(int id) {
-        Log.d(TAG, "---Before---");
+        if (DBG) Log.d(TAG, "Query Sensor Info " + id);
         if (id >= 0 && id < 74) { // Printable Ascii Characters between 0 and z
             sendCommand("{" + CMD.GET_SENSOR_INFO + CMD.DELIMITER + (char) ('0' + id) + "} ", true);
         }
-        Log.d(TAG, "---After---");
+        if (DBG) Log.d(TAG, "Got Sensor Info " + id);
     }
 
 // Connection Management----------------------------------------------------------------------------
@@ -166,6 +171,16 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     public void disconnect() {
         if (DBG) Log.d(TAG, "disconnect()");
         mBTDevice.disconnect();
+    }
+
+    public void init() {
+        queryNumberOfSensors();
+
+        for (int i = 0; i < numberOfSensors; i++) {
+            querySensorInfo(i);
+        }
+
+        mCallback.sendMessage(Message.obtain(null, MESSAGE.CHANGED, mAddress));
     }
 
     @Override
@@ -299,21 +314,17 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         this.numberOfSensors = numberOfSensors;
 
         sensors.ensureCapacity(numberOfSensors);
-
-        mCallback.sendMessage(Message.obtain(null, MESSAGE.CHANGED, mAddress));
     }
 
     private void handleSensorInfo(int id, String name, String part, int numberOfMeasurements) {
         if (DBG) Log.d(TAG, "Sensor[" + id + "] = " + name + " ("+ part +")");
 
-        Sensor sensor = new Sensor(id, name, part);
+        Sensor sensor = new Sensor(id, name, part, numberOfMeasurements);
 
         if (sensors.size() > id) {
             sensors.set(id, sensor);    // Replace existing entry
         } else {
             sensors.add(sensor);        // Add new Sensor
         }
-
-        mCallback.sendMessage(Message.obtain(null, MESSAGE.CHANGED, mAddress));
     }
 }

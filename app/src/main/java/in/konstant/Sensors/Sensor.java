@@ -4,13 +4,15 @@ public class Sensor {
     private final int id;
     private final String name;
     private final String part;
+    private final int numberOfMeasurements;
 
     private Measurement[] measurements;
 
-    public Sensor(int id, String name, String part) {
+    public Sensor(int id, String name, String part, int numberOfMeasurements) {
         this.id = id;
         this.name = name;
         this.part = part;
+        this.numberOfMeasurements = numberOfMeasurements;
     }
 
     public int getId() {
@@ -26,7 +28,8 @@ public class Sensor {
     }
 
     public int getNumberOfMeasurements() {
-        return this.measurements.length;
+//        return this.measurements.length; //TODO: For testing
+        return numberOfMeasurements;
     }
 
     public Measurement getMeasurement(int index) {

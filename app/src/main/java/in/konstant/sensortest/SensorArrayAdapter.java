@@ -1,13 +1,11 @@
 package in.konstant.sensortest;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.BaseExpandableListAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -15,9 +13,10 @@ import java.util.HashMap;
 import java.util.Set;
 
 import in.konstant.R;
+import in.konstant.Sensors.Sensor;
 import in.konstant.Sensors.SensorDevice;
 
-public class SensorArrayAdapter extends BaseAdapter {
+public class SensorArrayAdapter extends BaseExpandableListAdapter {
     private final static String TAG = "SensorArrayAdapter";
     private final static boolean DBG = true;
 
@@ -26,11 +25,17 @@ public class SensorArrayAdapter extends BaseAdapter {
     private ArrayList<String> ids;
     private HashMap<String, SensorDevice> devices;
 
-    static class ViewHolder {
+    static class DeviceViewHolder {
         public TextView name;
         public TextView address;
         public View connected;
         public TextView nrOfSensors;
+    }
+
+    static class SensorViewHolder {
+        public TextView name;
+        public TextView part;
+        public TextView nrOfMeasurements;
     }
 
     public SensorArrayAdapter(Activity context) {
@@ -41,22 +46,46 @@ public class SensorArrayAdapter extends BaseAdapter {
     }
 
     @Override
-    public SensorDevice getItem(int id) {
+    public SensorDevice getGroup(int id) {
         return devices.get(ids.get(id));
     }
 
-    public SensorDevice getItem(String address) {
+    public SensorDevice getGroup(String address) {
         return devices.get(address);
     }
 
-    @Override
-    public long getItemId(int id) {
-        return 0;
+    public Sensor getChild(int id, int childId) {
+        return getGroup(id).getSensor(childId);
     }
 
     @Override
-    public int getCount() {
+    public long getGroupId(int id) {
+        return id;
+    }
+
+    @Override
+    public long getChildId(int id, int childId) {
+        return childId;
+    }
+
+    @Override
+    public int getGroupCount() {
         return ids.size();
+    }
+
+    @Override
+    public int getChildrenCount(int id) {
+        return getGroup(id).getNumberOfSensors();
+    }
+
+    @Override
+    public boolean isChildSelectable(int groupId, int childId) {
+        return true;
+    }
+
+    @Override
+    public boolean hasStableIds() {
+        return false;
     }
 
     public Set<String> getKeySet() {
@@ -92,24 +121,23 @@ public class SensorArrayAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        View rowView = convertView;
+    public View getGroupView(int id, boolean isExpanded, View convertView, ViewGroup parent) {
 
-        if (rowView == null) {
+        if (convertView == null) {
             LayoutInflater inflater = context.getLayoutInflater();
-            rowView = inflater.inflate(R.layout.arrayadapter_sensorarray, null);
+            convertView = inflater.inflate(R.layout.arrayadapter_sensorarray_group, null);
 
-            ViewHolder viewHolder = new ViewHolder();
-            viewHolder.name = (TextView) rowView.findViewById(R.id.tvName);
-            viewHolder.address = (TextView) rowView.findViewById(R.id.tvAddress);
-            viewHolder.connected = (View) rowView.findViewById(R.id.inConnected);
-            viewHolder.nrOfSensors = (TextView) rowView.findViewById(R.id.tvNrOfSensors);
+            DeviceViewHolder deviceViewHolder = new DeviceViewHolder();
+            deviceViewHolder.name = (TextView) convertView.findViewById(R.id.tvDeviceName);
+            deviceViewHolder.address = (TextView) convertView.findViewById(R.id.tvDeviceAddress);
+            deviceViewHolder.connected = (View) convertView.findViewById(R.id.inDeviceConnected);
+            deviceViewHolder.nrOfSensors = (TextView) convertView.findViewById(R.id.tvDeviceNrOfSensors);
 
-            rowView.setTag(viewHolder);
+            convertView.setTag(deviceViewHolder);
         }
 
-        ViewHolder holder = (ViewHolder) rowView.getTag();
-        SensorDevice item = getItem(position);
+        DeviceViewHolder holder = (DeviceViewHolder) convertView.getTag();
+        SensorDevice item = getGroup(id);
 
         holder.name.setText(item.getDeviceName());
         holder.address.setText(item.getBluetoothAddress());
@@ -137,6 +165,42 @@ public class SensorArrayAdapter extends BaseAdapter {
 
         holder.connected.setBackgroundColor(parent.getContext().getResources().getColor(ColorId));
 
-        return rowView;
+        return convertView;
+    }
+
+    @Override
+    public View getChildView(int id,
+                             final int childId,
+                             boolean isLastChild,
+                             View convertView,
+                             ViewGroup parent) {
+
+        if (convertView == null) {
+            LayoutInflater inflater = context.getLayoutInflater();
+            convertView = inflater.inflate(R.layout.arrayadapter_sensorarray_child, null);
+
+            SensorViewHolder sensorViewHolder = new SensorViewHolder();
+            sensorViewHolder.name = (TextView) convertView.findViewById(R.id.tvSensorName);
+            sensorViewHolder.part = (TextView) convertView.findViewById(R.id.tvSensorPart);
+            sensorViewHolder.nrOfMeasurements = (TextView) convertView.findViewById(R.id.tvSensorNoOfMeasurements);
+
+            convertView.setTag(sensorViewHolder);
+        }
+
+        SensorViewHolder holder = (SensorViewHolder) convertView.getTag();
+        Sensor item = getGroup(id).getSensor(childId);
+
+        holder.name.setText(item.getName());
+        holder.part.setText(item.getPart());
+
+        int nrOfMeasurements = item.getNumberOfMeasurements();
+
+        holder.nrOfMeasurements.setText(parent.getContext().getResources().getQuantityString(
+                        R.plurals.device_list_nrOfMeasurements,
+                        nrOfMeasurements,
+                        nrOfMeasurements)
+        );
+
+        return convertView;
     }
 }

@@ -17,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -102,8 +103,8 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
 
         enableToasts = false;
 
-        for (int d = 0; d < mSensorDevices.getCount(); d++) {
-            mSensorDevices.getItem(d).quit();
+        for (int d = 0; d < mSensorDevices.getGroupCount(); d++) {
+            mSensorDevices.getGroup(d).quit();
         }
 
         BTControl.unregisterStateChangeReceiver(this, BTStateChangeReceiver);
@@ -165,8 +166,8 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
                         break;
 
                     case BluetoothAdapter.STATE_OFF:
-                            for (int d = 0; d < mSensorDevices.getCount(); d++) {
-                                mSensorDevices.getItem(d).disconnect();
+                            for (int d = 0; d < mSensorDevices.getGroupCount(); d++) {
+                                mSensorDevices.getGroup(d).disconnect();
                             }
 
                             mSensorDevices.notifyDataSetChanged();
@@ -196,7 +197,7 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
             if (DBG) Log.d(TAG, "DeviceHandler(" + msg.what + ", " + msg.obj + ")");
 
             String address = (String) msg.obj;
-            String name = mSensorDevices.getItem(address).getDeviceName();
+            String name = mSensorDevices.getGroup(address).getDeviceName();
 
             switch (msg.what) {
                 case SensorDevice.MESSAGE.CREATED:
@@ -224,6 +225,8 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
                     toast(getResources().getString(
                             R.string.toast_connected,
                             name));
+
+                    mSensorDevices.getGroup(address).init();
                     break;
 
                 case SensorDevice.MESSAGE.CONNECTION_FAILED:
@@ -263,34 +266,30 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
     }
 
     private void prepareListView() {
-        ListView SensorDeviceList = (ListView) findViewById(R.id.lvSensorDevices);
+        ExpandableListView SensorDeviceList = (ExpandableListView) findViewById(R.id.lvSensorDevices);
         SensorDeviceList.setAdapter(mSensorDevices);
-
-        SensorDeviceList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                showSensorDeviceListDialog(position);
-            }
-        });
 
         SensorDeviceList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
 
-                new AlertDialog.Builder(SensorArray.this)
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setTitle(R.string.dialog_delete_all_title)
-                        .setMessage(R.string.dialog_delete_all_message)
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                mSensorDevices.clear();
-                            }
-                        })
-                        .setNegativeButton("No", null)
-                        .show();
+                int itemType = ExpandableListView.getPackedPositionType(id);
 
-                return true;
+                if ( itemType == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+                    int childPosition = ExpandableListView.getPackedPositionChild(id);
+                    int groupPosition = ExpandableListView.getPackedPositionGroup(id);
+
+                    return false;
+
+                } else if(itemType == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
+                    int groupPosition = ExpandableListView.getPackedPositionGroup(id);
+
+                    showSensorDeviceListDialog(groupPosition);
+
+                    return true;
+                } else {
+                    return false;
+                }
             }
         });
     }
@@ -301,8 +300,8 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
         Bundle args = new Bundle();
 
         args.putInt(SensorDeviceListDialog.ARG_ID, id);
-        args.putString(SensorDeviceListDialog.ARG_NAME, mSensorDevices.getItem(id).getDeviceName());
-        args.putBoolean(SensorDeviceListDialog.ARG_CONNECTED, mSensorDevices.getItem(id).getConnected());
+        args.putString(SensorDeviceListDialog.ARG_NAME, mSensorDevices.getGroup(id).getDeviceName());
+        args.putBoolean(SensorDeviceListDialog.ARG_CONNECTED, mSensorDevices.getGroup(id).getConnected());
 
         dialog.setArguments(args);
         dialog.show(getFragmentManager(), "showSensorDeviceListDialog");
@@ -313,17 +312,17 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
         if (DBG) Log.d(TAG, "Connect/Disconnect Device " + id);
 
         if (connected) {
-            mSensorDevices.getItem(id).disconnect();
+            mSensorDevices.getGroup(id).disconnect();
         } else {
             if (BTControl.enabled()) {
-                mSensorDevices.getItem(id).connect();
+                mSensorDevices.getGroup(id).connect();
             } else {
                 new AlertDialog.Builder(this)
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .setTitle(R.string.dialog_nobt_title)
                         .setMessage(getResources().getString(
                                 R.string.dialog_nobt_message,
-                                mSensorDevices.getItem(id).getDeviceName()))
+                                mSensorDevices.getGroup(id).getDeviceName()))
                         .setPositiveButton("Yes", new DialogInterface.OnClickListener()
                         {
                             @Override
@@ -339,7 +338,7 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
 
     @Override
     public void onSensorDeviceListDialogSettings(int id) {
-        mSensorDevices.getItem(id).querySensorInfo(0);
+        mSensorDevices.getGroup(id).querySensorInfo(0);
     }
 
     @Override
@@ -353,12 +352,12 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
                 .setTitle(R.string.dialog_delete_title)
                 .setMessage(getResources().getString(
                         R.string.dialog_delete_message,
-                        mSensorDevices.getItem(id).getDeviceName()))
+                        mSensorDevices.getGroup(id).getDeviceName()))
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener()
                 {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mSensorDevices.getItem(deviceId).quit();
+                        mSensorDevices.getGroup(deviceId).quit();
                     }
                 })
                 .setNegativeButton("No", null)

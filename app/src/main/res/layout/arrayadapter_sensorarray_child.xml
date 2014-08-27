@@ -13,44 +13,45 @@
     android:useDefaultMargins="true">
 
     <View
-        android:id="@+id/inConnected"
+        android:id="@+id/inSensorSpacer"
         android:layout_width="16dp"
-        android:layout_height="45dp"
+        android:layout_height="18dp"
         android:layout_marginTop="5dp"
         android:layout_gravity="left"
-        android:background="@color/disconnected"
+        android:background="@color/transparent"
         android:layout_row="0"
-        android:layout_column="0"
-        android:layout_rowSpan="2"/>
+        android:layout_column="0" />
 
     <TextView
-        android:id="@+id/tvName"
+        android:id="@+id/tvSensorName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left"
-        android:textSize="18dp"
+        android:textSize="16dp"
         android:typeface="monospace"
         android:text="Name"
         android:layout_row="0"
         android:layout_column="1" />
 
     <TextView
-        android:id="@+id/tvAddress"
+        android:id="@+id/tvSensorPart"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left"
         android:typeface="monospace"
-        android:text="Address"
+        android:textSize="14dp"
+        android:text="Part"
         android:layout_row="1"
         android:layout_column="1" />
 
     <TextView
-        android:id="@+id/tvNrOfSensors"
+        android:id="@+id/tvSensorNoOfMeasurements"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right"
         android:typeface="monospace"
-        android:text="@plurals/device_list_nrOfSensors"
+        android:textSize="12dp"
+        android:text="@plurals/device_list_nrOfMeasurements"
         android:layout_row="0"
         android:layout_column="2" />
 

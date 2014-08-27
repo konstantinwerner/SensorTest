@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp"
+    android:orientation="vertical"
+    android:columnCount="3"
+    android:rowCount="2"
+    android:useDefaultMargins="true">
+
+    <View
+        android:id="@+id/inDeviceConnected"
+        android:layout_width="16dp"
+        android:layout_height="45dp"
+        android:layout_marginTop="5dp"
+        android:layout_gravity="left"
+        android:background="@color/disconnected"
+        android:layout_row="0"
+        android:layout_column="0"
+        android:layout_rowSpan="2"/>
+
+    <TextView
+        android:id="@+id/tvDeviceName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:textSize="18dp"
+        android:typeface="monospace"
+        android:text="Name"
+        android:layout_row="0"
+        android:layout_column="1" />
+
+    <TextView
+        android:id="@+id/tvDeviceAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left"
+        android:typeface="monospace"
+        android:text="Address"
+        android:layout_row="1"
+        android:layout_column="1" />
+
+    <TextView
+        android:id="@+id/tvDeviceNrOfSensors"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:typeface="monospace"
+        android:textSize="14dp"
+        android:text="@plurals/device_list_nrOfSensors"
+        android:layout_row="0"
+        android:layout_column="2" />
+
+</GridLayout>
