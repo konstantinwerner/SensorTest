@@ -4,13 +4,13 @@ public class Unit {
     public final String name;
     public final String symbol;
     public final Prefix prefix;
-    public final Subunit baseunits[];
+    public final Subunit baseUnits[];
 
-    public Unit(String name, String symbol, Prefix prefix, Subunit baseunits[]) {
+    public Unit(String name, String symbol, Prefix prefix, Subunit baseUnits[]) {
         this.name = name;
         this.symbol = symbol;
         this.prefix = prefix;
-        this.baseunits = baseunits;
+        this.baseUnits = baseUnits;
     }
 
     @Override
@@ -18,14 +18,14 @@ public class Unit {
         StringBuilder num = new StringBuilder();
         StringBuilder den = new StringBuilder();
 
-        for (int i = 0; i < this.baseunits.length; i++) {
+        for (int i = 0; i < this.baseUnits.length; i++) {
 
-            if (this.baseunits[i].exponent < 0) {
-                den.append(this.baseunits[i].toString());
+            if (this.baseUnits[i].exponent < 0) {
+                den.append(this.baseUnits[i].toString());
                 den.append(" ");
-            } else if (this.baseunits[i].exponent > 0)
+            } else if (this.baseUnits[i].exponent > 0)
             {
-                num.append(this.baseunits[i].toString());
+                num.append(this.baseUnits[i].toString());
                 num.append(" ");
             }
         }

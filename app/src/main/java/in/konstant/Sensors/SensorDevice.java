@@ -153,12 +153,23 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         if (DBG) Log.d(TAG, "Got No. of Sensors");
     }
 
-    public void querySensorInfo(int id) {
-        if (DBG) Log.d(TAG, "Query Sensor Info " + id);
-        if (id >= 0 && id < 74) { // Printable Ascii Characters between 0 and z
-            sendCommand("{" + CMD.GET_SENSOR_INFO + CMD.DELIMITER + (char) ('0' + id) + "} ", true);
+    public void querySensorInfo(int sensor) {
+        if (DBG) Log.d(TAG, "Query Sensor Info " + sensor);
+        if (sensor >= 0 && sensor < 74) { // Printable Ascii Characters between 0 and z
+            sendCommand("{" + CMD.GET_SENSOR_INFO + CMD.DELIMITER + (char) ('0' + sensor) + "} ", true);
         }
-        if (DBG) Log.d(TAG, "Got Sensor Info " + id);
+        if (DBG) Log.d(TAG, "Got Sensor Info " + sensor);
+    }
+
+    public void queryMeasurementInfo(int sensor, int measurement) {
+        if (DBG) Log.d(TAG, "Query Measurement Info " + sensor + ", " + measurement);
+        if (sensor >= 0 && sensor < 74 &&
+            measurement >= 0 && measurement < 74) { // Printable Ascii Characters between 0 and z
+            sendCommand("{" + CMD.GET_SENSOR_MEAS_INFO + CMD.DELIMITER +
+                        (char) ('0' + sensor) + CMD.DELIMITER +
+                        (char) ('0' + measurement)+ "} ", true);
+        }
+        if (DBG) Log.d(TAG, "Got Measurement Info " + sensor + ", " + measurement);
     }
 
 // Connection Management----------------------------------------------------------------------------
@@ -174,13 +185,26 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
     }
 
     public void init() {
-        queryNumberOfSensors();
+        Runnable initializer = new Runnable() {
+            @Override
+            public void run() {
+                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
-        for (int i = 0; i < numberOfSensors; i++) {
-            querySensorInfo(i);
-        }
+                queryNumberOfSensors();
 
-        mCallback.sendMessage(Message.obtain(null, MESSAGE.CHANGED, mAddress));
+                for (int s = 0; s < numberOfSensors; s++) {
+                    querySensorInfo(s);
+
+                    for (int m = 0; m < sensors.get(s).getNumberOfMeasurements(); m++) {
+                        queryMeasurementInfo(s, m);
+                    }
+                }
+
+                mCallback.sendMessage(Message.obtain(null, MESSAGE.CHANGED, mAddress));
+            }
+        };
+
+        initializer.run();
     }
 
     @Override
@@ -280,27 +304,12 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         if (args.length == 0)
             return;
 
-        if (DBG)
-            for (int a = 0; a < args.length; a++)
-                Log.d(TAG, "Arg[" + a +"] = " + args[a]);
-
         switch (args[0].charAt(0)) {
-            case CMD.GET_NO_SENSORS:
-                handleNumberOfSensors(Integer.parseInt(args[1]));
-                break;
-
-            case CMD.GET_SENSOR_INFO:
-                handleSensorInfo(
-                        Integer.parseInt(args[1]),
-                        args[2],
-                        args[3],
-                        Integer.parseInt(args[4]));
-                break;
-
-            case CMD.GET_SENSOR_MEAS: break;
-            case CMD.GET_SENSOR_MEAS_INFO: break;
-            case CMD.GET_SENSOR_UNIT_INFO: break;
-            case CMD.SET_SENSOR_RANGE: break;
+            case CMD.GET_NO_SENSORS:        handleNumberOfSensors(args); break;
+            case CMD.GET_SENSOR_INFO:       handleSensorInfo(args); break;
+            case CMD.GET_SENSOR_MEAS_INFO:  handleMeasurementInfo(args); break;
+            case CMD.GET_SENSOR_UNIT_INFO:  handleUnitInfo(args); break;
+            case CMD.GET_SENSOR_MEAS:       handleMeasurement(args); break;
             default:
         }
 
@@ -308,23 +317,35 @@ public class SensorDevice extends HandlerThread implements Handler.Callback {
         notifyAll();
     }
 
-    private void handleNumberOfSensors(int numberOfSensors) {
-        if (DBG) Log.d(TAG, "Sensors = " + numberOfSensors);
+    private void handleNumberOfSensors(String[] args) {
+        this.numberOfSensors = Integer.parseInt(args[1]);
 
-        this.numberOfSensors = numberOfSensors;
+        if (DBG) Log.d(TAG, "Sensors = " + numberOfSensors);
 
         sensors.ensureCapacity(numberOfSensors);
     }
 
-    private void handleSensorInfo(int id, String name, String part, int numberOfMeasurements) {
-        if (DBG) Log.d(TAG, "Sensor[" + id + "] = " + name + " ("+ part +")");
+    private void handleSensorInfo(String[] args) {
+        Sensor sensor = new Sensor(args);
 
-        Sensor sensor = new Sensor(id, name, part, numberOfMeasurements);
-
-        if (sensors.size() > id) {
-            sensors.set(id, sensor);    // Replace existing entry
+        if (sensors.size() > sensor.getId()) {
+            sensors.set(sensor.getId(), sensor);  // Replace existing entry
         } else {
-            sensors.add(sensor);        // Add new Sensor
+            sensors.add(sensor);            // Add new Sensor
         }
+    }
+
+    private void handleMeasurementInfo(String[] args) {
+        Measurement measurement = new Measurement(args);
+
+        sensors.get(measurement.getSensorId()).addMeasurement(measurement.getId(), measurement);
+    }
+
+    private void handleUnitInfo(String[] args) {
+
+    }
+
+    private void handleMeasurement(String[] args) {
+
     }
 }

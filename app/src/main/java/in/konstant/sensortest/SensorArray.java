@@ -18,7 +18,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ExpandableListView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +27,7 @@ import java.util.Set;
 import in.konstant.BT.BTControl;
 import in.konstant.BT.BTDeviceList;
 import in.konstant.R;
-import in.konstant.Sensors.InternalSensors;
+import in.konstant.Sensors.InternalSensorDevice;
 import in.konstant.Sensors.SensorDevice;
 
 public class SensorArray extends Activity implements SensorDeviceListDialog.SensorDeviceListDialogListener {
@@ -39,7 +38,7 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
     private static final String DEVICE_ADDRESSES = "deviceAddresses";
 
     private SensorArrayAdapter mSensorDevices;
-    private InternalSensors mInternalSensors;
+    private InternalSensorDevice mInternalSensorDevice;
 
     private boolean enableToasts = false;
 
@@ -59,7 +58,7 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
         BTControl.registerStateChangeReceiver(this, BTStateChangeReceiver);
 
         mSensorDevices = new SensorArrayAdapter(this);
-        mInternalSensors = new InternalSensors(this);
+        mInternalSensorDevice = new InternalSensorDevice(this);
 
         loadDeviceList();
         loadInternalSensors();
@@ -132,16 +131,16 @@ public class SensorArray extends Activity implements SensorDeviceListDialog.Sens
 
     private void loadInternalSensors() {
         TextView tv = (TextView) findViewById(R.id.tvOwnName);
-        tv.setText(mInternalSensors.getName());
+        tv.setText(mInternalSensorDevice.getDeviceName());
 
         tv = (TextView) findViewById(R.id.tvOwnAddress);
-        tv.setText(mInternalSensors.getAddress());
+        tv.setText(mInternalSensorDevice.getBluetoothAddress());
 
         tv = (TextView) findViewById(R.id.tvOwnNrOfSensors);
         tv.setText(getResources().getQuantityString(
                 R.plurals.device_list_nrOfSensors,
-                mInternalSensors.getNumberOfSensors(),
-                mInternalSensors.getNumberOfSensors()
+                mInternalSensorDevice.getNumberOfSensors(),
+                mInternalSensorDevice.getNumberOfSensors()
         ));
     }
 

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import in.konstant.R;
+import in.konstant.Sensors.InternalSensorDevice;
 import in.konstant.Sensors.Sensor;
 import in.konstant.Sensors.SensorDevice;
 
@@ -47,7 +48,7 @@ public class SensorArrayAdapter extends BaseExpandableListAdapter {
 
     @Override
     public SensorDevice getGroup(int id) {
-        return devices.get(ids.get(id));
+            return devices.get(ids.get(id));
     }
 
     public SensorDevice getGroup(String address) {
@@ -75,7 +76,7 @@ public class SensorArrayAdapter extends BaseExpandableListAdapter {
 
     @Override
     public int getChildrenCount(int id) {
-        return getGroup(id).getNumberOfSensors();
+       return getGroup(id).getNumberOfSensors();
     }
 
     @Override
@@ -85,7 +86,7 @@ public class SensorArrayAdapter extends BaseExpandableListAdapter {
 
     @Override
     public boolean hasStableIds() {
-        return false;
+        return true;
     }
 
     public Set<String> getKeySet() {
